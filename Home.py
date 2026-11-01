@@ -115,7 +115,15 @@ for col, name in zip(cols, team):
 st.markdown("### 🔗 Documentation & Links")
 l1, l2, l3 = st.columns(3)
 with l1:
-    st.markdown('<div class="link-pill">GitHub<small>Coming soon</small></div>', unsafe_allow_html=True)
+        st.markdown(
+    '''
+    <div class="link-pill">
+        <a href="https://github.com/Harshitjhamb/RoadSense_AI" target="_blank">GitHub</a>
+        <small>View Source Code ↗</small>
+    </div>
+    ''',
+    unsafe_allow_html=True
+)
 with l2:
     st.markdown('<div class="link-pill">Documentation<small>Coming soon</small></div>', unsafe_allow_html=True)
 with l3:
