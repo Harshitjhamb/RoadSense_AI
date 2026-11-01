@@ -113,7 +113,7 @@ for col, name in zip(cols, team):
         )
 
 st.markdown("### 🔗 Documentation & Links")
-l1, l2, l3 = st.columns(3)
+l1, l2 = st.columns(3)
 with l1:
         st.markdown(
     '''
@@ -125,9 +125,17 @@ with l1:
     unsafe_allow_html=True
 )
 with l2:
-    st.markdown('<div class="link-pill">Documentation<small>Coming soon</small></div>', unsafe_allow_html=True)
-with l3:
-    st.markdown('<div class="link-pill">Project Report<small>Coming soon</small></div>', unsafe_allow_html=True)
+   st.markdown(
+    '''
+    <div class="link-pill">
+        <a href="https://docs.google.com/document/d/1q8E7ipjZ3ycM4Mclm2cLY9mwE1X_wjHhZg6n4aKdSII/edit?tab=t.0"
+           target="_blank">
+            Project Report ↗
+        </a>
+    </div>
+    ''',
+    unsafe_allow_html=True
+)
 
 st.divider()
 st.caption("Machine Learning Semester Project · Team of 5 · Built with YOLOv8 and Streamlit")
