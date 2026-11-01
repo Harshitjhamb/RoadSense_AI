@@ -113,7 +113,7 @@ for col, name in zip(cols, team):
         )
 
 st.markdown("### 🔗 Documentation & Links")
-l1, l2 = st.columns(3)
+l1, l2 = st.columns(2)
 with l1:
         st.markdown(
     '''
