@@ -9,7 +9,7 @@ import streamlit as st
 
 # Deep learning framework
 from ultralytics import YOLO
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 
 from sample_utils.download import download_file
@@ -55,15 +55,19 @@ class Detection(NamedTuple):
 st.title("Road Damage Detection - Image")
 st.write("Detect the road damage in using an Image input. Upload the image and start detecting. This section can be useful for examining baseline data.")
 
-image_file = st.file_uploader("Upload Image", type=['png', 'jpg'])
+image_file = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg', 'webp', 'bmp'])
 
-score_threshold = st.slider("Confidence Threshold", min_value=0.0, max_value=1.0, value=0.5, step=0.05)
+score_threshold = st.slider("Confidence Threshold", min_value=0.0, max_value=1.0, value=0.25, step=0.05)
 st.write("Lower the threshold if there is no damage detected, and increase the threshold if there is false prediction.")
 
 if image_file is not None:
 
     # Load the image
+    # Normalise to a 3-channel RGB image (handles grayscale, RGBA/PNG
+    # transparency, palette images and phone-camera EXIF rotation)
     image = Image.open(image_file)
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("RGB")
     
     col1, col2 = st.columns(2)
 
@@ -73,7 +77,8 @@ if image_file is not None:
     w_ori = _image.shape[1]
 
     image_resized = cv2.resize(_image, (640, 640), interpolation = cv2.INTER_AREA)
-    results = net.predict(image_resized, conf=score_threshold)
+    # Ultralytics expects BGR numpy arrays
+    results = net.predict(cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR), conf=score_threshold)
     
     # Save the results
     for result in results:
@@ -88,17 +93,35 @@ if image_file is not None:
             for _box in boxes
         ]
 
-    annotated_frame = results[0].plot()
+    annotated_frame = cv2.cvtColor(results[0].plot(), cv2.COLOR_BGR2RGB)
     _image_pred = cv2.resize(annotated_frame, (w_ori, h_ori), interpolation = cv2.INTER_AREA)
+
+    # Summary of what the model found
+    all_detections = [d for r in results for d in
+                      (Detection(int(b.cls), CLASSES[int(b.cls)], float(b.conf), b.xyxy[0].astype(int))
+                       for b in r.boxes.cpu().numpy())]
+    if all_detections:
+        st.success(f"✅ {len(all_detections)} damage region(s) detected at confidence ≥ {score_threshold:.2f}")
+        st.table([
+            {"#": i + 1, "Damage Type": d.label, "Confidence": f"{d.score:.0%}"}
+            for i, d in enumerate(sorted(all_detections, key=lambda d: -d.score))
+        ])
+    else:
+        st.warning(
+            f"⚠️ No damage detected at confidence ≥ {score_threshold:.2f}. "
+            "The prediction image is identical to the original. Lower the threshold slider to look for weaker detections."
+        )
 
     # Original Image
     with col1:
-        st.write("#### Image")
+        st.markdown("#### 🖼️ Original Image")
+        st.caption("Uploaded photo, no processing")
         st.image(_image)
     
     # Predicted Image
     with col2:
-        st.write("#### Predictions")
+        st.markdown("#### 🎯 Model Prediction")
+        st.caption("Detected damage drawn as coloured boxes with confidence")
         st.image(_image_pred)
 
         # Download predicted image
