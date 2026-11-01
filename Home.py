@@ -132,6 +132,7 @@ with l2:
            target="_blank">
             Project Report ↗
         </a>
+         <small>View Project Documentation ↗</small>
     </div>
     ''',
     unsafe_allow_html=True
